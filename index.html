@@ -3,106 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Perya Color Game</title>
+    <title>Authentic Perya Drop Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            /* Simulating the wooden floor from the image */
-            background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.5)), 
-                        repeating-linear-gradient(90deg, #c29b62 0px, #a87f43 10px, #c29b62 20px);
+            background-color: #1a1a1a;
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow-x: hidden;
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            overflow: hidden;
         }
 
-        /* --- 3D Box & Tray Styling --- */
-        .game-container {
-            margin-top: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        /* --- 3D Scene Setup --- */
+        .scene {
+            perspective: 1200px;
             width: 100%;
-            max-width: 600px;
-        }
-
-        .tray-wrapper {
-            perspective: 800px;
-            margin-bottom: -20px;
-            z-index: 10;
-        }
-
-        .cyan-box {
-            width: 320px;
-            height: 320px;
-            background-color: #ffcc00; /* Yellow inside */
-            border: 15px solid #00bcd4; /* Cyan border */
-            border-bottom-width: 30px;
-            border-top-width: 20px;
-            transform: rotateX(40deg);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            max-width: 500px;
+            height: 450px;
             position: relative;
-            border-radius: 4px;
-        }
-
-        .box-lid {
-            position: absolute;
-            top: -150px;
-            width: 100%;
-            height: 150px;
-            background-color: #ffcc00;
-            border: 15px solid #00bcd4;
-            transform-origin: bottom;
-            transform: rotateX(-30deg);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
-            display: flex;
-            justify-content: center;
-        }
-
-        .lid-handle {
-            width: 80px;
-            height: 20px;
-            border: 8px solid #008ba3;
-            border-top: none;
             margin-top: 20px;
         }
 
-        /* --- 3D Dice Engine --- */
-        .dice-area {
-            display: flex;
-            gap: 20px;
-            transform: translateY(20px) translateZ(30px);
+        /* The Wooden Table */
+        .table-board {
+            position: absolute;
+            bottom: -50px;
+            left: 5%;
+            width: 90%;
+            height: 400px;
+            background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), 
+                        repeating-linear-gradient(90deg, #c29b62 0px, #a87f43 15px, #c29b62 30px);
+            transform: rotateX(65deg);
+            transform-origin: bottom center;
+            border: 15px solid #6b4c2a;
+            border-bottom: 30px solid #4a331a;
+            box-shadow: 0 -30px 50px rgba(0,0,0,0.8) inset, 0 20px 30px rgba(0,0,0,0.9);
+            border-radius: 10px;
         }
 
-        .scene {
+        /* The Top Cyan Box */
+        .top-box {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 90px;
+            background-color: #ffcc00; /* Inside yellow */
+            border: 12px solid #00bcd4; /* Cyan border */
+            border-bottom: none; /* Open at the bottom */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6), inset 0 10px 20px rgba(0,0,0,0.5);
+            z-index: 20;
+        }
+
+        /* The Lid/Funnel flap */
+        .box-flap {
+            position: absolute;
+            bottom: -20px;
+            left: -12px;
+            width: calc(100% + 24px);
+            height: 30px;
+            background-color: #00bcd4;
+            transform-origin: top;
+            transform: rotateX(40deg);
+            z-index: 21;
+        }
+
+        /* --- Dice Mechanics --- */
+        .dice-container {
+            position: absolute;
+            top: 20px; /* Hidden inside the box */
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 15;
+        }
+
+        /* Handles the drop trajectory (Y-axis and scaling) */
+        .die-translator {
+            transform: translateY(0px) scale(0.4);
+            /* Fast drop, bounces at the bottom */
+            transition: transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Handles the spinning (3D rotations) */
+        .cube {
             width: 50px;
             height: 50px;
-            perspective: 600px;
-        }
-
-        .cube {
-            width: 100%;
-            height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            /* The cubic-bezier makes it spin fast then slow down naturally */
-            transition: transform 3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: rotateX(0deg) rotateY(0deg);
+            transition: transform 1.5s cubic-bezier(0.1, 0.8, 0.2, 1);
         }
 
         .cube__face {
             position: absolute;
             width: 50px;
             height: 50px;
-            border: 2px solid #333;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            border: 3px solid #222;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.4);
+            border-radius: 4px;
         }
 
-        /* Mapping Colors to Cube Faces */
+        /* Dice Colors */
         .cube__face--front  { transform: rotateY(  0deg) translateZ(25px); background: #ff0000; } /* Red */
         .cube__face--back   { transform: rotateY(180deg) translateZ(25px); background: #00ff00; } /* Green */
         .cube__face--right  { transform: rotateY( 90deg) translateZ(25px); background: #0000ff; } /* Blue */
@@ -110,26 +117,28 @@
         .cube__face--top    { transform: rotateX( 90deg) translateZ(25px); background: #ff00ff; } /* Pink */
         .cube__face--bottom { transform: rotateX(-90deg) translateZ(25px); background: #ffffff; } /* White */
 
-        /* --- Betting Grid Styling --- */
+
+        /* --- UI & Controls --- */
         .betting-board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            background: #000;
-            padding: 8px;
-            border: 4px solid #00bcd4;
+            gap: 6px;
+            background: #111;
+            padding: 10px;
+            border: 5px solid #00bcd4;
             border-radius: 8px;
-            z-index: 20;
-            width: 320px;
+            width: 100%;
+            max-width: 400px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            margin-top: 10px;
+            z-index: 30;
         }
 
         .color-btn {
-            height: 80px;
+            height: 70px;
             cursor: pointer;
-            border: 2px solid #000;
-            border-radius: 4px;
-            transition: transform 0.1s;
+            border: 3px solid #000;
+            border-radius: 6px;
             position: relative;
             display: flex;
             align-items: center;
@@ -137,185 +146,151 @@
         }
         
         .color-btn:active { transform: scale(0.95); }
-        .color-btn:hover { border-color: white; border-width: 3px; }
-
+        
         .bet-badge {
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             color: white;
-            font-weight: bold;
+            font-weight: black;
             font-size: 1.2rem;
-            padding: 2px 8px;
-            border-radius: 10px;
+            padding: 4px 10px;
+            border-radius: 20px;
             pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
-        /* Board Colors */
-        .bg-btn-yellow { background-color: #ffff00; }
-        .bg-btn-white  { background-color: #ffffff; }
-        .bg-btn-pink   { background-color: #ff00ff; }
-        .bg-btn-blue   { background-color: #0000ff; }
-        .bg-btn-red    { background-color: #ff0000; }
-        .bg-btn-green  { background-color: #00ff00; }
+        .bg-yellow { background-color: #ffff00; }
+        .bg-white  { background-color: #ffffff; }
+        .bg-pink   { background-color: #ff00ff; }
+        .bg-blue   { background-color: #0000ff; }
+        .bg-red    { background-color: #ff0000; }
+        .bg-green  { background-color: #00ff00; }
 
-        /* UI Panel */
-        .ui-panel {
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            padding: 15px 30px;
-            margin-bottom: 20px;
-            text-align: center;
-            backdrop-filter: blur(5px);
-        }
     </style>
 </head>
 <body>
 
-    <div class="game-container">
+    <div class="w-full max-w-md flex justify-between items-center px-6 mt-4 z-30 relative bg-black/50 p-3 rounded-xl border border-gray-700">
+        <div>
+            <p class="text-[10px] text-gray-400 uppercase font-bold">Wallet</p>
+            <p class="text-xl font-black text-green-400">₱<span id="balance">1000</span></p>
+        </div>
+        <h2 id="status-text" class="text-yellow-400 font-bold text-center uppercase tracking-wider text-sm w-32">Place Bets</h2>
+        <div class="text-right">
+            <p class="text-[10px] text-gray-400 uppercase font-bold">Bet</p>
+            <p class="text-xl font-black text-white">₱<span id="current-bet">0</span></p>
+        </div>
+    </div>
+
+    <div class="scene">
+        <div class="table-board"></div>
         
-        <div class="ui-panel w-full max-w-sm flex justify-between items-center">
-            <div>
-                <p class="text-xs text-gray-400 uppercase tracking-widest font-bold">Balance</p>
-                <p class="text-2xl font-black text-green-400">₱<span id="balance">1000</span></p>
-            </div>
-            <div class="text-right">
-                <p class="text-xs text-gray-400 uppercase tracking-widest font-bold">Current Bet</p>
-                <p class="text-2xl font-black text-yellow-400">₱<span id="current-bet">0</span></p>
-            </div>
+        <div class="top-box">
+            <div class="box-flap"></div>
         </div>
 
-        <h2 id="status-text" class="text-white font-bold text-xl mb-4 h-8 drop-shadow-md">Place your bets!</h2>
-
-        <div class="tray-wrapper">
-            <div class="cyan-box">
-                <div class="box-lid">
-                    <div class="lid-handle"></div>
+        <div class="dice-container">
+            <div class="die-translator" id="trans1">
+                <div class="cube" id="die1">
+                    <div class="cube__face cube__face--front"></div><div class="cube__face cube__face--back"></div>
+                    <div class="cube__face cube__face--right"></div><div class="cube__face cube__face--left"></div>
+                    <div class="cube__face cube__face--top"></div><div class="cube__face cube__face--bottom"></div>
                 </div>
-                
-                <div class="dice-area">
-                    <div class="scene">
-                        <div class="cube" id="die1">
-                            <div class="cube__face cube__face--front"></div>
-                            <div class="cube__face cube__face--back"></div>
-                            <div class="cube__face cube__face--right"></div>
-                            <div class="cube__face cube__face--left"></div>
-                            <div class="cube__face cube__face--top"></div>
-                            <div class="cube__face cube__face--bottom"></div>
-                        </div>
-                    </div>
-                    <div class="scene">
-                        <div class="cube" id="die2">
-                            <div class="cube__face cube__face--front"></div>
-                            <div class="cube__face cube__face--back"></div>
-                            <div class="cube__face cube__face--right"></div>
-                            <div class="cube__face cube__face--left"></div>
-                            <div class="cube__face cube__face--top"></div>
-                            <div class="cube__face cube__face--bottom"></div>
-                        </div>
-                    </div>
-                    <div class="scene">
-                        <div class="cube" id="die3">
-                            <div class="cube__face cube__face--front"></div>
-                            <div class="cube__face cube__face--back"></div>
-                            <div class="cube__face cube__face--right"></div>
-                            <div class="cube__face cube__face--left"></div>
-                            <div class="cube__face cube__face--top"></div>
-                            <div class="cube__face cube__face--bottom"></div>
-                        </div>
-                    </div>
+            </div>
+            <div class="die-translator" id="trans2">
+                <div class="cube" id="die2">
+                    <div class="cube__face cube__face--front"></div><div class="cube__face cube__face--back"></div>
+                    <div class="cube__face cube__face--right"></div><div class="cube__face cube__face--left"></div>
+                    <div class="cube__face cube__face--top"></div><div class="cube__face cube__face--bottom"></div>
+                </div>
+            </div>
+            <div class="die-translator" id="trans3">
+                <div class="cube" id="die3">
+                    <div class="cube__face cube__face--front"></div><div class="cube__face cube__face--back"></div>
+                    <div class="cube__face cube__face--right"></div><div class="cube__face cube__face--left"></div>
+                    <div class="cube__face cube__face--top"></div><div class="cube__face cube__face--bottom"></div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="betting-board">
-            <div class="color-btn bg-btn-yellow" data-color="yellow"></div>
-            <div class="color-btn bg-btn-white" data-color="white"></div>
-            <div class="color-btn bg-btn-pink" data-color="pink"></div>
-            <div class="color-btn bg-btn-blue" data-color="blue"></div>
-            <div class="color-btn bg-btn-red" data-color="red"></div>
-            <div class="color-btn bg-btn-green" data-color="green"></div>
-        </div>
+    <div class="betting-board">
+        <div class="color-btn bg-yellow" data-color="yellow"></div>
+        <div class="color-btn bg-white" data-color="white"></div>
+        <div class="color-btn bg-pink" data-color="pink"></div>
+        <div class="color-btn bg-blue" data-color="blue"></div>
+        <div class="color-btn bg-red" data-color="red"></div>
+        <div class="color-btn bg-green" data-color="green"></div>
+    </div>
 
-        <div class="mt-8 flex gap-4 w-full max-w-sm">
-            <button id="clear-btn" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors border-2 border-gray-500 shadow-lg">
-                CLEAR
-            </button>
-            <button id="pull-btn" class="flex-[2] bg-cyan-500 hover:bg-cyan-400 text-black font-black text-lg py-3 px-4 rounded-lg transition-colors border-2 border-cyan-200 shadow-[0_0_15px_rgba(0,188,212,0.8)]">
-                PULL & ROLL
-            </button>
-        </div>
-
+    <div class="mt-4 flex gap-3 w-full max-w-md px-4 z-30 pb-6">
+        <button id="clear-btn" class="flex-1 bg-gray-800 text-gray-300 font-bold py-4 rounded-xl border border-gray-600 uppercase text-sm">Clear</button>
+        <button id="pull-btn" class="flex-[2] bg-cyan-500 hover:bg-cyan-400 text-black font-black text-xl py-4 rounded-xl border-b-4 border-cyan-700 uppercase shadow-[0_0_20px_rgba(0,188,212,0.5)]">
+            PULL
+        </button>
     </div>
 
     <script>
-        // Game Logic & Configuration
         let balance = 1000;
         let isRolling = false;
-        const betUnit = 50; // Every click adds 50
-        
-        const bets = {
-            yellow: 0, white: 0, pink: 0,
-            blue: 0, red: 0, green: 0
-        };
+        const betUnit = 50;
+        const bets = { yellow: 0, white: 0, pink: 0, blue: 0, red: 0, green: 0 };
 
         const colorFaces = [
-            { name: 'red',    x: 0,   y: 0 },    // Front Face
-            { name: 'green',  x: 0,   y: 180 },  // Back Face
-            { name: 'blue',   x: 0,   y: -90 },  // Right Face
-            { name: 'yellow', x: 0,   y: 90 },   // Left Face
-            { name: 'pink',   x: -90, y: 0 },    // Top Face
-            { name: 'white',  x: 90,  y: 0 }     // Bottom Face
+            { name: 'red',    x: 0,   y: 0 },
+            { name: 'green',  x: 0,   y: 180 },
+            { name: 'blue',   x: 0,   y: -90 },
+            { name: 'yellow', x: 0,   y: 90 },
+            { name: 'pink',   x: -90, y: 0 },
+            { name: 'white',  x: 90,  y: 0 }
         ];
 
-        // DOM Elements
-        const balanceDisplay = document.getElementById('balance');
-        const betDisplay = document.getElementById('current-bet');
-        const statusText = document.getElementById('status-text');
-        const colorBtns = document.querySelectorAll('.color-btn');
+        const uiBalance = document.getElementById('balance');
+        const uiBet = document.getElementById('current-bet');
+        const uiStatus = document.getElementById('status-text');
+        const btns = document.querySelectorAll('.color-btn');
+
+        // Physics elements
+        const translators = [
+            document.getElementById('trans1'),
+            document.getElementById('trans2'),
+            document.getElementById('trans3')
+        ];
         const cubes = [
             document.getElementById('die1'),
             document.getElementById('die2'),
             document.getElementById('die3')
         ];
 
-        // Betting Interaction
-        colorBtns.forEach(btn => {
+        // Betting System
+        btns.forEach(btn => {
             btn.addEventListener('click', () => {
                 if (isRolling) return;
                 if (balance >= betUnit) {
-                    const color = btn.dataset.color;
-                    bets[color] += betUnit;
+                    bets[btn.dataset.color] += betUnit;
                     balance -= betUnit;
                     updateUI();
                 } else {
-                    statusText.textContent = "Insufficient Funds!";
-                    statusText.style.color = "#ff4444";
+                    uiStatus.textContent = "NO FUNDS";
+                    uiStatus.className = "text-red-500 font-bold text-center uppercase tracking-wider text-sm w-32";
                 }
             });
         });
 
         document.getElementById('clear-btn').addEventListener('click', () => {
             if (isRolling) return;
-            let totalRefund = Object.values(bets).reduce((a, b) => a + b, 0);
-            balance += totalRefund;
+            balance += Object.values(bets).reduce((a, b) => a + b, 0);
             for (let c in bets) bets[c] = 0;
-            statusText.textContent = "Bets cleared.";
-            statusText.style.color = "#ffffff";
             updateUI();
         });
 
         function updateUI() {
-            balanceDisplay.textContent = balance;
-            betDisplay.textContent = Object.values(bets).reduce((a, b) => a + b, 0);
-
-            colorBtns.forEach(btn => {
+            uiBalance.textContent = balance;
+            uiBet.textContent = Object.values(bets).reduce((a, b) => a + b, 0);
+            
+            btns.forEach(btn => {
                 const color = btn.dataset.color;
-                // Remove old badge
                 const oldBadge = btn.querySelector('.bet-badge');
                 if (oldBadge) oldBadge.remove();
-                
-                // Add new badge if bet exists
                 if (bets[color] > 0) {
                     const badge = document.createElement('div');
                     badge.className = 'bet-badge';
@@ -325,82 +300,87 @@
             });
         }
 
-        // 3D Roll Logic
+        // PULL Mechanics (Drop and Spin)
         document.getElementById('pull-btn').addEventListener('click', () => {
             const totalBet = Object.values(bets).reduce((a, b) => a + b, 0);
             if (totalBet === 0) {
-                statusText.textContent = "Place a bet first!";
-                statusText.style.color = "#ffcc00";
+                uiStatus.textContent = "BET FIRST";
+                uiStatus.className = "text-red-400 font-bold text-center uppercase tracking-wider text-sm w-32";
                 return;
             }
             if (isRolling) return;
 
             isRolling = true;
-            statusText.textContent = "Rolling...";
-            statusText.style.color = "#00bcd4";
+            uiStatus.textContent = "ROLLING...";
+            uiStatus.className = "text-cyan-400 font-bold text-center uppercase tracking-wider text-sm w-32 animate-pulse";
 
-            const results = [];
-
-            cubes.forEach((cube, index) => {
-                // Pick a random winning face for this die
-                const randomFace = colorFaces[Math.floor(Math.random() * colorFaces.length)];
-                results.push(randomFace.name);
-
-                // Add random multiple of 360 to simulate chaotic spinning
-                // We add more spins to the later dice so they stop slightly later
-                const spinsX = (Math.floor(Math.random() * 5) + 5 + index) * 360; 
-                const spinsY = (Math.floor(Math.random() * 5) + 5 + index) * 360;
-
-                const finalX = randomFace.x + spinsX;
-                const finalY = randomFace.y + spinsY;
-
-                // Apply the CSS 3D transform
-                cube.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg)`;
+            // 1. Instantly pull dice back inside the cyan box
+            translators.forEach((t, i) => {
+                t.style.transition = 'none';
+                t.style.transform = 'translateY(0px) scale(0.4)';
+                cubes[i].style.transition = 'none';
+                cubes[i].style.transform = 'rotateX(0deg) rotateY(0deg)';
             });
 
-            // Wait for the 3-second CSS transition to finish
+            // 2. Wait a split second, then apply the Drop & Roll physics
             setTimeout(() => {
-                calculateWinnings(results);
-                isRolling = false;
-            }, 3200); 
+                const results = [];
+
+                translators.forEach((t, i) => {
+                    const randomFace = colorFaces[Math.floor(Math.random() * colorFaces.length)];
+                    results.push(randomFace.name);
+
+                    // Add random tumbling rotations (multiples of 360)
+                    const extraSpinsX = (4 + i + Math.floor(Math.random() * 3)) * 360;
+                    const extraSpinsY = (4 + i + Math.floor(Math.random() * 3)) * 360;
+
+                    // Spread them out slightly on the table
+                    const spreadX = (i - 1) * 80 + (Math.random() * 20 - 10);
+                    // Drop distance onto the table
+                    const dropY = 320 + Math.random() * 40;
+
+                    // Restore transitions
+                    // Translators bounce down
+                    t.style.transition = `transform ${1.3 + (i * 0.2)}s cubic-bezier(0.34, 1.56, 0.64, 1)`;
+                    t.style.transform = `translateX(${spreadX}px) translateY(${dropY}px) scale(1.2)`;
+
+                    // Cubes spin while dropping
+                    cubes[i].style.transition = `transform ${1.3 + (i * 0.2)}s cubic-bezier(0.2, 0.9, 0.3, 1)`;
+                    cubes[i].style.transform = `rotateX(${randomFace.x + extraSpinsX}deg) rotateY(${randomFace.y + extraSpinsY}deg)`;
+                });
+
+                // 3. Calculate winnings after the longest animation finishes
+                setTimeout(() => {
+                    calculateWinnings(results);
+                    isRolling = false;
+                }, 1800);
+
+            }, 50); // Small delay to ensure the reset frame renders
         });
 
         function calculateWinnings(results) {
             let winnings = 0;
             let resultCounts = { yellow: 0, white: 0, pink: 0, blue: 0, red: 0, green: 0 };
-            
             results.forEach(color => resultCounts[color]++);
 
             Object.keys(bets).forEach(color => {
                 if (bets[color] > 0 && resultCounts[color] > 0) {
-                    // Return original bet + (bet amount * multiplier)
                     winnings += bets[color] + (bets[color] * resultCounts[color]);
                 }
             });
 
             if (winnings > 0) {
                 balance += winnings;
-                statusText.textContent = `YOU WON ₱${winnings}!`;
-                statusText.style.color = "#00ff00";
+                uiStatus.textContent = `WON ₱${winnings}`;
+                uiStatus.className = "text-green-400 font-black text-center uppercase tracking-wider text-sm w-32";
             } else {
-                statusText.textContent = "House wins. Try again!";
-                statusText.style.color = "#ff4444";
+                uiStatus.textContent = "HOUSE WINS";
+                uiStatus.className = "text-red-500 font-bold text-center uppercase tracking-wider text-sm w-32";
             }
 
-            // Reset bets for the next round
             for (let c in bets) bets[c] = 0;
             updateUI();
         }
-
-        // Initialize dice to random starting positions instantly (no animation)
-        cubes.forEach(cube => {
-            cube.style.transition = 'none';
-            cube.style.transform = `rotateX(${Math.floor(Math.random() * 360)}deg) rotateY(${Math.floor(Math.random() * 360)}deg)`;
-            setTimeout(() => {
-                cube.style.transition = 'transform 3s cubic-bezier(0.2, 0.8, 0.2, 1)';
-            }, 100);
-        });
-
     </script>
 </body>
 </html>
